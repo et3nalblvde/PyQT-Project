@@ -230,7 +230,6 @@ class RegistrationWindow(QtWidgets.QDialog):
         self.create_users_file()
 
     def create_users_file(self):
-        # Проверяем, существует ли файл пользователей, если нет — создаем его
         if not os.path.exists(users):
             with open(users, 'w', encoding='utf-8') as csvfile:
                 csvfile.write("# Имя|Имя пользователя|Пароль\n")
@@ -241,16 +240,14 @@ class RegistrationWindow(QtWidgets.QDialog):
         name = self.name_input.text().strip()
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        # Проверка на пробелы в имени пользователя
         if " " in username:
             QMessageBox.warning(self, "Ошибка", "Имя пользователя не должно содержать пробелы.")
             return
 
         try:
-            # Проверяем, существует ли уже такой пользователь
             user_exists = False
             with open(users, 'r', encoding='utf-8') as csvfile:
-                next(csvfile)  # Пропускаем заголовок
+                next(csvfile)
                 for line in csvfile:
                     _, user, _ = line.strip().split('|')
                     if user == username:
@@ -261,11 +258,9 @@ class RegistrationWindow(QtWidgets.QDialog):
                 QMessageBox.warning(self, "Ошибка", "Имя пользователя уже существует.")
                 return
 
-            # Добавляем пользователя в файл
             with open(users, 'a', encoding='utf-8') as csvfile:
                 csvfile.write(f"{name}|{username}|{hashed_password}\n")
 
-            # Создаем базу данных для нового пользователя
             self.create_user_movies_database(username)
             QMessageBox.information(self, "Успех", "Регистрация прошла успешно!")
             self.accept()
@@ -283,7 +278,6 @@ class RegistrationWindow(QtWidgets.QDialog):
         if db.open():
             query = QSqlQuery(db)
 
-            # Создаем таблицы, если они не существуют
             query.exec(""" CREATE TABLE IF NOT EXISTS genres (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL
@@ -309,13 +303,11 @@ class RegistrationWindow(QtWidgets.QDialog):
                 favorite INTEGER
             ); """)
 
-            # Подключаемся к оригинальной базе данных
             original_db = QSqlDatabase.addDatabase("QSQLITE", "original_db")
             original_db.setDatabaseName(f'{data}/movies.db')
             if original_db.open():
                 original_query = QSqlQuery(original_db)
 
-                # Копируем данные из оригинальной базы данных
                 original_query.exec("SELECT * FROM genres;")
                 while original_query.next():
                     genre_id = original_query.value(0)
@@ -346,12 +338,11 @@ class RegistrationWindow(QtWidgets.QDialog):
                         f"VALUES ({id}, '{title}', '{original_title}', {average_rating}, '{genres}', {num_votes}, {year}, '{film_link}', '{poster_link}', '{description}', {favorite});"
                     )
 
-                original_db.close()  # Закрываем соединение с оригинальной базой
+                original_db.close()
             else:
                 QMessageBox.critical(self, "Ошибка", "Не удалось открыть оригинальную базу данных.")
                 return False
 
-            # Проверяем ошибки в запросах
             if query.lastError().isValid():
                 QMessageBox.critical(self, "Ошибка", query.lastError().text())
                 return False
@@ -485,19 +476,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.centralwidget = QtWidgets.QWidget(parent=self)
         self.setCentralWidget(self.centralwidget)
 
-        # Главный вертикальный layout
         self.layout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.layout.setSpacing(10)
         self.layout.setContentsMargins(15, 15, 15, 15)
 
-        # Меню "Добавить фильм"
         menubar = self.menuBar()
         add_movie_menu = menubar.addMenu("Добавить фильм")
         add_movie_action = QtGui.QAction("Добавить новый фильм", self)
         add_movie_action.triggered.connect(self.open_add_movie_window)
         add_movie_menu.addAction(add_movie_action)
 
-        # Кнопка профиля
         self.profile_button = QtWidgets.QPushButton(parent=self.centralwidget)
         self.profile_button.setIcon(QtGui.QIcon(f'{icons}/avatar.jpeg'))
         self.profile_button.setIconSize(QtCore.QSize(40, 40))
@@ -517,12 +505,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.profile_button.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.layout.addWidget(self.profile_button)
 
-        # Layout для кнопок "Экспорт в Excel" и "Обновить"
         self.button_layout = QtWidgets.QHBoxLayout()
         self.button_layout.setSpacing(10)
         self.button_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Кнопка экспорта в Excel
         self.ExportButton = QtWidgets.QPushButton(parent=self.centralwidget)
         self.ExportButton.setText("Экспорт в Excel")
         self.ExportButton.setStyleSheet("""
@@ -543,7 +529,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ExportButton.clicked.connect(self.export_to_excel)
         self.button_layout.addWidget(self.ExportButton)
 
-        # Кнопка обновления
         self.refresh_button = QtWidgets.QPushButton(parent=self.centralwidget)
         self.refresh_button.setIcon(QtGui.QIcon(f'{icons}/refresh.png'))
         self.refresh_button.setIconSize(QtCore.QSize(20, 20))
@@ -566,10 +551,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.refresh_button.clicked.connect(self.refresh_database)
         self.button_layout.addWidget(self.refresh_button)
 
-        # Добавление горизонтального layout в основной layout
         self.layout.addLayout(self.button_layout)
 
-        # Поле поиска и кнопка поиска
         self.search_layout = QtWidgets.QHBoxLayout()
         self.search_layout.setSpacing(10)
         self.search_layout.setContentsMargins(0, 0, 0, 0)
@@ -606,7 +589,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.search_layout.addWidget(self.SearchButton)
         self.layout.addLayout(self.search_layout)
 
-        # Выпадающие списки для сортировки
         self.sort_date_combo = QtWidgets.QComboBox(parent=self.centralwidget)
         self.sort_date_combo.addItems(["Сортировать по дате", "По возрастанию", "По убыванию"])
         self.sort_date_combo.currentIndexChanged.connect(self.handle_sorting)
@@ -617,7 +599,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sort_alpha_combo.currentIndexChanged.connect(self.handle_sorting)
         self.layout.addWidget(self.sort_alpha_combo)
 
-        # Кнопка фильтрации
         self.FilterButton = QtWidgets.QPushButton(parent=self.centralwidget)
         self.FilterButton.setText("Фильтрация")
         self.FilterButton.setStyleSheet("""
@@ -638,7 +619,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.FilterButton.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.layout.addWidget(self.FilterButton)
 
-        # Таблица фильмов
         self.MovieTable = QtWidgets.QTableView(parent=self.centralwidget)
         self.MovieTable.setStyleSheet("""
             QTableView {
@@ -658,12 +638,10 @@ class MainWindow(QtWidgets.QMainWindow):
         """)
         self.layout.addWidget(self.MovieTable)
 
-        # Строка состояния
         self.statusbar = QtWidgets.QStatusBar(parent=self)
         self.statusbar.setStyleSheet("background-color: #f0f0f0; border-top: 1px solid #ccc;")
         self.setStatusBar(self.statusbar)
 
-        # Подключение сигналов
         self.SearchWindow.textChanged.connect(self.filter_movies)
         self.SearchButton.clicked.connect(self.filter_movies)
         self.MovieTable.doubleClicked.connect(self.show_film_details)
@@ -1100,6 +1078,29 @@ class FilmDetailsWindow(QtWidgets.QDialog):
         for button in [film_link_button, favorite_button, close_button]:
             button.setFixedHeight(button_height)
 
+    def get_genre_id(self, genre_name):
+        """Получаем ID жанра по его имени."""
+        query = QtSql.QSqlQuery()
+        query.prepare("SELECT id FROM genres WHERE name = ?")
+        query.addBindValue(genre_name)
+        query.exec()
+
+        if query.next():
+            return query.value(0)
+        else:
+            print(f"Genre '{genre_name}' not found.")
+        return None
+
+    def link_movie_to_genre(self, movie_id, genre_id):
+        """Связываем фильм с жанром через таблицу moviegenres."""
+        query = QtSql.QSqlQuery()
+        query.prepare("INSERT INTO moviegenres (movie_id, genre_id) VALUES (?, ?)")
+        query.addBindValue(movie_id)
+        query.addBindValue(genre_id)
+
+        if not query.exec():
+            print(f"Error linking movie {movie_id} to genre {genre_id}: {query.lastError().text()}")
+
     def edit_movie(self, title, year, rating, film_link, poster_link, description, genre):
         edit_dialog = QtWidgets.QDialog(self)
         edit_dialog.setWindowTitle("Редактировать информацию о фильме")
@@ -1139,12 +1140,30 @@ class FilmDetailsWindow(QtWidgets.QDialog):
             "background-color: white; border: 1px solid #4169E1; border-radius: 5px; padding: 10px;")
         layout.addWidget(rating_input)
 
-        genre_input = QtWidgets.QLineEdit(genre)
-        genre_input.setPlaceholderText("Жанр")
-        genre_input.setFixedHeight(40)
-        genre_input.setStyleSheet(
-            "background-color: white; border: 1px solid #4169E1; border-radius: 5px; padding: 10px;")
-        layout.addWidget(genre_input)
+        genre_input_layout = QtWidgets.QVBoxLayout()
+
+        genre_list = [
+            "Экшн", "Приключения", "Анимация", "Биография", "Комедия",
+            "Криминал", "Документальный", "Драма", "Семейный", "Фэнтези",
+            "Нуар", "Исторический", "Ужасы", "Мюзикл", "Мистика",
+            "Романтика", "Научная фантастика", "Короткометражный", "Спорт",
+            "Триллер", "Война", "Вестерн", "Супергеройский", "Музыкальный",
+            "Постапокалиптика", "Фантастика", "Сказка",
+            "Политический", "Антиутопия", "Артхаус", "Комикс", "Шпионский",
+            "Детектив"
+        ]
+
+        self.genre_checkboxes = {}
+        for genre_name in genre_list:
+            checkbox = QtWidgets.QCheckBox(genre_name)
+            genre_input_layout.addWidget(checkbox)
+            self.genre_checkboxes[genre_name] = checkbox
+
+        for g in genre.split(", "):
+            if g in self.genre_checkboxes:
+                self.genre_checkboxes[g].setChecked(True)
+
+        layout.addLayout(genre_input_layout)
 
         film_link_input = QtWidgets.QLineEdit(film_link)
         film_link_input.setPlaceholderText("Ссылка на фильм")
@@ -1176,7 +1195,8 @@ class FilmDetailsWindow(QtWidgets.QDialog):
         save_button.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
 
         save_button.clicked.connect(
-            lambda: self.save_changes(title_input.text(), year_input.text(), rating_input.text(), genre_input.text(),
+            lambda: self.save_changes(title_input.text(), year_input.text(), rating_input.text(),
+                                      self.get_selected_genres(),
                                       film_link_input.text(), poster_link, description_input.toPlainText(),
                                       edit_dialog, title))
         layout.addWidget(save_button)
@@ -1185,8 +1205,25 @@ class FilmDetailsWindow(QtWidgets.QDialog):
 
         edit_dialog.exec()
 
-    def save_changes(self, title, year, rating, genre, film_link, poster_link, description, dialog, old_title):
+    def get_selected_genres(self):
+        selected_genres = []
+        for genre_id, checkbox in self.genre_checkboxes.items():
+            if checkbox.isChecked():
+                selected_genres.append(genre_id)
+        return selected_genres
 
+    def add_genre(self, genre_name):
+        query = QtSql.QSqlQuery()
+        query.prepare("INSERT INTO genres (name) VALUES (?)")
+        query.addBindValue(genre_name)
+
+        if query.exec():
+            self.show_message("Успех", "Жанр успешно добавлен.", QtWidgets.QMessageBox.Icon.Information)
+        else:
+            self.show_message("Ошибка", f"Ошибка при добавлении жанра: {query.lastError().text()}",
+                              QtWidgets.QMessageBox.Icon.Critical)
+
+    def save_changes(self, title, year, rating, genre, film_link, poster_link, description, dialog, old_title):
         warning_message = "При изменении названия фильма может пропасть постер. Вы уверены, что хотите продолжить?"
         reply = QtWidgets.QMessageBox.warning(
             self,
@@ -1199,6 +1236,31 @@ class FilmDetailsWindow(QtWidgets.QDialog):
         if reply == QtWidgets.QMessageBox.StandardButton.No:
             return
 
+        movie_id_query = QtSql.QSqlQuery()
+        movie_id_query.prepare("SELECT id FROM movies WHERE title = ?")
+        movie_id_query.addBindValue(old_title)
+        movie_id_query.exec()
+
+        movie_id = None
+        if movie_id_query.next():
+            movie_id = movie_id_query.value(0)
+
+        if not movie_id:
+            print("Movie ID not found!")
+            return
+
+        delete_genre_links_query = QtSql.QSqlQuery()
+        delete_genre_links_query.prepare("DELETE FROM moviegenres WHERE movie_id = ?")
+        delete_genre_links_query.addBindValue(movie_id)
+        delete_genre_links_query.exec()
+
+        for genre_name in genre:
+            genre_id = self.get_genre_id(genre_name)
+            if genre_id:
+                self.link_movie_to_genre(movie_id, genre_id)
+
+        genre_ids = ",".join(map(str, genre))
+
         query = QtSql.QSqlQuery()
         query.prepare(f"""
             UPDATE movies
@@ -1208,11 +1270,12 @@ class FilmDetailsWindow(QtWidgets.QDialog):
         query.addBindValue(title)
         query.addBindValue(year)
         query.addBindValue(rating)
-        query.addBindValue(genre)
+        query.addBindValue(genre_ids)
         query.addBindValue(film_link)
         query.addBindValue(poster_link)
         query.addBindValue(description)
         query.addBindValue(old_title)
+
         if query.exec():
             dialog.accept()
             if hasattr(self.parent(), 'update_movie_table'):
@@ -1224,6 +1287,27 @@ class FilmDetailsWindow(QtWidgets.QDialog):
     def closeEvent(self, event):
         self.hide()
         event.ignore()
+
+    def load_genres(self):
+        query = QtSql.QSqlQuery("SELECT id, name FROM genres")
+        genre_list = []
+        while query.next():
+            genre_id = query.value(0)
+            genre_name = query.value(1)
+            genre_list.append((genre_id, genre_name))
+        return genre_list
+
+    def create_genre_checkboxes(self):
+        genre_list = self.load_genres()
+        self.genre_checkboxes = {}
+
+        genre_input_layout = QtWidgets.QVBoxLayout()
+        for genre_id, genre_name in genre_list:
+            checkbox = QtWidgets.QCheckBox(genre_name)
+            genre_input_layout.addWidget(checkbox)
+            self.genre_checkboxes[genre_id] = checkbox
+
+        return genre_input_layout
 
     def create_button(self, text, bg_color, hover_color):
         button = QtWidgets.QPushButton(text)
@@ -1327,7 +1411,6 @@ class FilmDetailsWindow(QtWidgets.QDialog):
         msg_box.setText(message)
         msg_box.setIcon(icon)
         msg_box.exec()
-
 
 class PersonalCabinet(QtWidgets.QDialog):
     def __init__(self, username, parent=None):
@@ -1766,7 +1849,7 @@ class AddMovieWindow(QtWidgets.QDialog):
             }
         """)
 
-        self.selected_genres = []  # Список для хранения выбранных жанров
+        self.selected_genres = []
         self.add_widgets()
 
     def add_widgets(self):
@@ -1783,12 +1866,10 @@ class AddMovieWindow(QtWidgets.QDialog):
         self.genre_label = QtWidgets.QLabel("Жанры:")
         self.layout.addWidget(self.genre_label)
 
-        # Кнопка для выбора жанров
         self.select_genres_button = QtWidgets.QPushButton("Выбрать жанры", self)
         self.select_genres_button.clicked.connect(self.open_genre_selection)
         self.layout.addWidget(self.select_genres_button)
 
-        # Метка для отображения выбранных жанров
         self.selected_genres_label = QtWidgets.QLabel("Выбранные жанры: None", self)
         self.layout.addWidget(self.selected_genres_label)
 
@@ -1822,12 +1903,10 @@ class AddMovieWindow(QtWidgets.QDialog):
         self.layout.addWidget(self.add_button)
 
     def open_genre_selection(self):
-        # Открыть окно выбора жанров
         genre_window = SelectGenreWindow(self)
         if genre_window.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             self.selected_genres = genre_window.get_selected_genres()
 
-            # Обновить метку с выбранными жанрами
             if self.selected_genres:
                 self.selected_genres_label.setText(f"Выбранные жанры: {', '.join(self.selected_genres)}")
             else:
@@ -1844,7 +1923,6 @@ class AddMovieWindow(QtWidgets.QDialog):
 
         query = QtSql.QSqlQuery()
 
-        # Вставляем фильм в таблицу movies
         sql_movie = """
             INSERT INTO movies (title, original_title, average_rating, num_votes, year, film_link, description)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -1863,20 +1941,24 @@ class AddMovieWindow(QtWidgets.QDialog):
             QMessageBox.warning(self, "Ошибка", f"Не удалось добавить фильм: {query.lastError().text()}")
             return
 
-        # Получаем ID только что вставленного фильма
         movie_id = query.lastInsertId()
         print(f"Added movie with ID: {movie_id}")
 
-        # Обрабатываем жанры
+        genres_str = ", ".join(self.selected_genres)
+        update_query = QtSql.QSqlQuery()
+        update_query.prepare("UPDATE movies SET genres = ? WHERE id = ?")
+        update_query.addBindValue(genres_str)
+        update_query.addBindValue(movie_id)
+
+        if not update_query.exec():
+            print(f"Error updating genres for movie {movie_id}: {update_query.lastError().text()}")
+
         for genre_name in self.selected_genres:
-            # Проверяем, существует ли жанр в таблице genres
             genre_id = self.get_genre_id(genre_name)
             if not genre_id:
-                # Если жанр отсутствует, добавляем его
                 genre_id = self.add_genre(genre_name)
                 print(f"Added genre '{genre_name}' with ID: {genre_id}")
 
-            # Связываем фильм с жанром через таблицу moviegenres
             if genre_id:
                 self.link_movie_to_genre(movie_id, genre_id)
 
@@ -1889,7 +1971,6 @@ class AddMovieWindow(QtWidgets.QDialog):
             print("Genre name is empty.")
             return None
 
-        # Проверяем, существует ли жанр в таблице genres
         existing_genre_id = self.get_genre_id(genre_name)
         if existing_genre_id:
             print(f"Genre '{genre_name}' already exists with ID: {existing_genre_id}")
@@ -1897,30 +1978,12 @@ class AddMovieWindow(QtWidgets.QDialog):
 
         query = QtSql.QSqlQuery()
         query.prepare("INSERT INTO genres (name) VALUES (?)")
-        query.addBindValue(genre_name.strip())  # Убираем лишние пробелы
+        query.addBindValue(genre_name.strip())
 
         if query.exec():
             genre_id = query.lastInsertId()
             print(f"Genre '{genre_name}' inserted with ID: {genre_id}")
-            return genre_id  # Возвращаем ID нового жанра
-        else:
-            print(f"Error adding genre '{genre_name}': {query.lastError().text()}")
-            return None
-
-        # Проверяем, существует ли жанр в таблице genres
-        existing_genre_id = self.get_genre_id(genre_name)
-        if existing_genre_id:
-            print(f"Genre '{genre_name}' already exists with ID: {existing_genre_id}")
-            return existing_genre_id
-
-        query = QtSql.QSqlQuery()
-        query.prepare("INSERT INTO genres (name) VALUES (?)")
-        query.addBindValue(genre_name.strip())  # Убираем лишние пробелы
-
-        if query.exec():
-            genre_id = query.lastInsertId()
-            print(f"Genre '{genre_name}' inserted with ID: {genre_id}")
-            return genre_id  # Возвращаем ID нового жанра
+            return genre_id
         else:
             print(f"Error adding genre '{genre_name}': {query.lastError().text()}")
             return None
@@ -1964,7 +2027,6 @@ class SelectGenreWindow(QtWidgets.QDialog):
         self.genre_list_widget = QtWidgets.QListWidget(self)
         self.genre_list_widget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.MultiSelection)
 
-        # Список всех доступных жанров
         genres = [
             "Экшн", "Приключения", "Анимация", "Биография", "Комедия",
             "Криминал", "Документальный", "Драма", "Семейный", "Фэнтези",
