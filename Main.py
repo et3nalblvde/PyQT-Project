@@ -1966,7 +1966,6 @@ class AddMovieWindow(QtWidgets.QDialog):
         self.hide()
 
     def add_genre(self, genre_name):
-        """Добавляем жанр в таблицу genres, если его нет."""
         if not genre_name:
             print("Genre name is empty.")
             return None
@@ -1989,7 +1988,6 @@ class AddMovieWindow(QtWidgets.QDialog):
             return None
 
     def get_genre_id(self, genre_name):
-        """Получаем ID жанра по его имени."""
         query = QtSql.QSqlQuery()
         query.prepare("SELECT id FROM genres WHERE name = ?")
         query.addBindValue(genre_name)
@@ -2002,7 +2000,6 @@ class AddMovieWindow(QtWidgets.QDialog):
         return None
 
     def link_movie_to_genre(self, movie_id, genre_id):
-        """Связываем фильм с жанром через таблицу moviegenres."""
         query = QtSql.QSqlQuery()
         query.prepare("INSERT INTO moviegenres (movie_id, genre_id) VALUES (?, ?)")
         query.addBindValue(movie_id)
