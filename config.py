@@ -15,8 +15,3 @@ posters = str(posters).replace("\\", "/")
 users = str(users).replace("\\", "/")
 data = str(data).replace("\\", "/")
 icons = str(icons).replace("\\", "/")
-
-print("BASE_DIR:", BASE_DIR)
-print("Database path exists:", (BASE_DIR / "Database").exists())
-print("Users path exists:", (BASE_DIR / "Database" / "users.csv").exists())
-print(posters, users, icons,data, sep='\n')
