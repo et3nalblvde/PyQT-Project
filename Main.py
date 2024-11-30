@@ -1403,7 +1403,15 @@ class FilmDetailsWindow(QtWidgets.QDialog):
 
     def open_film_link(self, film_link):
         if film_link:
-            QtGui.QDesktopServices.openUrl(QUrl(film_link))
+            url = QUrl(film_link)
+            if url.isValid():
+                opened = QtGui.QDesktopServices.openUrl(url)
+                if not opened:
+                    QMessageBox.warning(self, 'Ошибка', 'Не удалось открыть ссылку.')
+            else:
+                QMessageBox.warning(self, 'Ошибка', 'Невалидная ссылка.')
+        else:
+            QMessageBox.warning(self, 'Ошибка', 'Ссылка не задана.')
 
     def show_message(self, title, message, icon):
         msg_box = QtWidgets.QMessageBox(self)
@@ -1750,7 +1758,7 @@ class MovieSelectionDialog(QtWidgets.QDialog):
     def find_movie_by_genre(self):
         mood_to_genre = {
             "Хочется динамичных сцен": "Экшн",
-            "Хочется драк и стрельбы": "Боевик",
+            "Хочется драк и стрельбы": "Криминал",
             "Хочется пугаться": "Ужасы",
             "Хочется поплакать": "Драма",
             "Хочется фантастики": "Сайфай",
@@ -1770,7 +1778,7 @@ class MovieSelectionDialog(QtWidgets.QDialog):
             "Хочется триллера": "Триллер",
             "Хочется вестерна": "Вестерн",
             "Хочется супергеройского": "Супергеройский",
-            "Хочется фантастики": "Фантастика"
+            "Хочется фантастики": "Научная фантастика"
         }
 
         selected_mood = self.mood_combo.currentText()
